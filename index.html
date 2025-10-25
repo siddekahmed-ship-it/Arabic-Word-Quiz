@@ -32,9 +32,9 @@
     <button id="next-btn" onclick="nextQuestion()" disabled>Next</button>
     <button id="reset-btn" onclick="resetProgress()">Reset Progress</button>
   </div>
-  <script>
-    // Sample data from your list
-        {Arabic:"أَهْلٌ", Root:"أَهْلَ", Pattern:"فَعَلَ", Grammar:"Noun (singular)", VerbForm:"—", English:"Family"},
+ <script>
+  const wordList = [
+    {Arabic:"أَهْلٌ", Root:"أَهْلَ", Pattern:"فَعَلَ", Grammar:"Noun (singular)", VerbForm:"—", English:"Family"},
     {Arabic:"أُو۟لَٰئِكَ", Root:"—", Pattern:"—", Grammar:"Demonstrative pronoun (plural)", VerbForm:"—", English:"Those"},
     {Arabic:"ءَايَةٌ", Root:"ءَيَيَ", Pattern:"فَعْلَة", Grammar:"Noun (fem. singular)", VerbForm:"—", English:"Verse"},
     {Arabic:"ءَايَاتٌ", Root:"ءَيَيَ", Pattern:"فَعْلَة", Grammar:"Noun (fem. plural)", VerbForm:"—", English:"Verses"},
@@ -174,8 +174,9 @@
   }
 
   showQuestion();
+</script>
 
-  </script>
-</body>
+  /body>
 </html>
+
 

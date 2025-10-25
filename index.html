@@ -1,0 +1,174 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Arabic Quiz Progress Tracker</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f7fa; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh;}
+    h1 { margin-top: 30px; color: #2c3e50; }
+    #quiz-box { background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(44,62,80,0.12); padding: 30px 24px; margin: 30px 0 20px 0; width: 350px; }
+    #question { font-size: 1.3em; margin-bottom: 18px; }
+    .choices { display: flex; flex-direction: column; gap: 12px; }
+    .choice-btn { padding: 12px; border-radius: 8px; border: 1px solid #16a085; background: #f7f7fa; font-size: 1em; cursor: pointer; transition: background 0.2s; }
+    .choice-btn:hover { background: #e0f7fa; }
+    .choice-btn.correct { background: #b2f2bb; border-color: #27ae60; }
+    .choice-btn.incorrect { background: #ffb3b3; border-color: #e74c3c; }
+    #progress-bar { width: 100%; background: #eee; border-radius: 8px; height: 16px; margin: 18px 0; }
+    #progress { background: #16a085; height: 100%; border-radius: 8px; transition: width 0.3s; }
+    #stats { margin-bottom: 10px; color: #555; }
+    #next-btn { margin-top: 18px; padding: 10px 22px; font-size: 1em; border: none; border-radius: 8px; background: #2c3e50; color: #fff; cursor: pointer; }
+    #next-btn:disabled { background: #aaa; }
+    #reset-btn { margin-top: 10px; background: #e74c3c; }
+  </style>
+</head>
+<body>
+  <h1>Arabic Quiz Progress Tracker</h1>
+  <div id="stats"></div>
+  <div id="progress-bar"><div id="progress"></div></div>
+  <div id="quiz-box">
+    <div id="question"></div>
+    <div class="choices" id="choices"></div>
+    <button id="next-btn" onclick="nextQuestion()" disabled>Next</button>
+    <button id="reset-btn" onclick="resetProgress()">Reset Progress</button>
+  </div>
+  <script>
+    // Sample data from your list
+    const wordList = [
+      {Arabic:"أَهْلٌ", Root:"أَهْلَ", Pattern:"فَعَلَ", Grammar:"Noun (singular)", VerbForm:"—", English:"Family"},
+      {Arabic:"أُو۟لَٰئِكَ", Root:"—", Pattern:"—", Grammar:"Demonstrative pronoun (plural)", VerbForm:"—", English:"Those"},
+      {Arabic:"ءَايَةٌ", Root:"ءَيَيَ", Pattern:"فَعْلَة", Grammar:"Noun (fem. singular)", VerbForm:"—", English:"Verse"},
+      {Arabic:"ءَايَاتٌ", Root:"ءَيَيَ", Pattern:"فَعْلَة", Grammar:"Noun (fem. plural)", VerbForm:"—", English:"Verses"},
+      {Arabic:"أَبٌ", Root:"أَبَ", Pattern:"فَعَلَ", Grammar:"Noun (singular)", VerbForm:"—", English:"Father"},
+      {Arabic:"آبَاءُ", Root:"أَبَ", Pattern:"فَعَلَ", Grammar:"Noun (plural)", VerbForm:"—", English:"Fathers"},
+      {Arabic:"أَتَى", Root:"أَتَى", Pattern:"فَعَلَ", Grammar:"Verb (past)", VerbForm:"I", English:"He came"},
+      {Arabic:"يَأْتِي", Root:"أَتَى", Pattern:"فَعَلَ", Grammar:"Verb (present)", VerbForm:"I", English:"He comes"},
+      {Arabic:"أَجْرٌ", Root:"أَجَرَ", Pattern:"فَعْل", Grammar:"Noun (singular)", VerbForm:"—", English:"Reward"},
+      {Arabic:"أُجُورٌ", Root:"أَجَرَ", Pattern:"فُعُول", Grammar:"Noun (plural)", VerbForm:"—", English:"Rewards"}
+    ];
+
+    // Progress tracking
+    let mastered = JSON.parse(localStorage.getItem('masteredWords') || '[]');
+    let currentIdx = null, currentQ = null, answered = false;
+
+    function getProgress() {
+      return mastered.length / wordList.length;
+    }
+
+    function updateStats() {
+      document.getElementById('stats').textContent =
+        `Mastered: ${mastered.length} / ${wordList.length}`;
+      document.getElementById('progress').style.width = (getProgress()*100) + '%';
+    }
+
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function pickQuestion() {
+      const pool = wordList.filter((_, i) => !mastered.includes(i));
+      if (pool.length === 0) return null;
+      const idx = wordList.indexOf(pool[Math.floor(Math.random() * pool.length)]);
+      const word = wordList[idx];
+      const qType = Math.ceil(Math.random()*5);
+      let question = {}, choices = [], answer = "";
+
+      if (qType === 1) {
+        question.text = `What is the meaning of <b style="font-size:1.3em;color:#16a085">${word.Arabic}</b>?`;
+        answer = word.English;
+        choices = shuffle(wordList.map(w => w.English).filter(e => e !== answer)).slice(0,3);
+        choices.push(answer);
+        choices = shuffle(choices);
+      } else if (qType === 2) {
+        question.text = `Which Arabic word means <b style="color:#34495e">${word.English}</b>?`;
+        answer = word.Arabic;
+        choices = shuffle(wordList.map(w => w.Arabic).filter(a => a !== answer)).slice(0,3);
+        choices.push(answer);
+        choices = shuffle(choices);
+      } else if (qType === 3) {
+        question.text = `Select the correct English for <b style="font-size:1.3em;color:#16a085">${word.Arabic}</b>:`;
+        answer = word.English;
+        choices = shuffle(wordList.map(w => w.English).filter(e => e !== answer)).slice(0,3);
+        choices.push(answer);
+        choices = shuffle(choices);
+      } else if (qType === 4) {
+        question.text = `What is the root of <b style="font-size:1.3em;color:#16a085">${word.Arabic}</b>?`;
+        answer = word.Root;
+        choices = shuffle(wordList.map(w => w.Root).filter(r => r !== answer && r !== "—")).slice(0,3);
+        choices.push(answer);
+        choices = shuffle(choices);
+      } else {
+        question.text = `What is the grammatical form of <b style="font-size:1.3em;color:#16a085">${word.Arabic}</b>?`;
+        answer = word.Grammar;
+        choices = shuffle(wordList.map(w => w.Grammar).filter(g => g !== answer && g !== "—")).slice(0,3);
+        choices.push(answer);
+        choices = shuffle(choices);
+      }
+      question.choices = choices;
+      question.answer = answer;
+      question.idx = idx;
+      question.qType = qType;
+      return question;
+    }
+
+    function showQuestion() {
+      updateStats();
+      currentQ = pickQuestion();
+      if (!currentQ) {
+        document.getElementById('question').innerHTML = "<b>Congratulations! You've mastered all words.</b>";
+        document.getElementById('choices').innerHTML = "";
+        document.getElementById('next-btn').disabled = true;
+        return;
+      }
+      currentIdx = currentQ.idx;
+      document.getElementById('question').innerHTML = currentQ.text;
+      const choicesDiv = document.getElementById('choices');
+      choicesDiv.innerHTML = "";
+      currentQ.choices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.className = "choice-btn";
+        btn.innerHTML = choice;
+        btn.onclick = () => selectAnswer(btn, choice);
+        choicesDiv.appendChild(btn);
+      });
+      document.getElementById('next-btn').disabled = true;
+      answered = false;
+    }
+
+    function selectAnswer(btn, choice) {
+      if (answered) return;
+      answered = true;
+      const correct = choice === currentQ.answer;
+      btn.classList.add(correct ? "correct" : "incorrect");
+      Array.from(document.getElementsByClassName('choice-btn')).forEach(b => {
+        if (b.innerHTML === currentQ.answer) b.classList.add("correct");
+        b.disabled = true;
+      });
+      if (correct && !mastered.includes(currentIdx)) {
+        mastered.push(currentIdx);
+        localStorage.setItem('masteredWords', JSON.stringify(mastered));
+      }
+      document.getElementById('next-btn').disabled = false;
+      updateStats();
+    }
+
+    function nextQuestion() {
+      showQuestion();
+    }
+
+    function resetProgress() {
+      if (confirm("Reset all progress?")) {
+        mastered = [];
+        localStorage.removeItem('masteredWords');
+        showQuestion();
+      }
+    }
+
+    showQuestion();
+  </script>
+</body>
+</html>

@@ -1,0 +1,3022 @@
+Arabic Quiz Progress Tracker - Full HTML Code
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Arabic Quiz Progress Tracker</title>
+  <style>
+    body { font-family: Arial, sans-serif; background: #f7f7fa; margin: 0; padding: 0; display: flex; flex-direction: column; align-items: center; min-height: 100vh;}
+    h1 { margin-top: 30px; color: #2c3e50; }
+    #quiz-box { background: #fff; border-radius: 16px; box-shadow: 0 4px 24px rgba(44,62,80,0.12); padding: 30px 24px; margin: 30px 0 20px 0; width: 350px; }
+    #question { font-size: 1.3em; margin-bottom: 18px; }
+    .choices { display: flex; flex-direction: column; gap: 12px; }
+    .choice-btn { padding: 12px; border-radius: 8px; border: 1px solid #16a085; background: #f7f7fa; font-size: 1em; cursor: pointer; transition: background 0.2s; }
+    .choice-btn:hover { background: #e0f7fa; }
+    .choice-btn.correct { background: #b2f2bb; border-color: #27ae60; }
+    .choice-btn.incorrect { background: #ffb3b3; border-color: #e74c3c; }
+    #progress-bar { width: 100%; background: #eee; border-radius: 8px; height: 16px; margin: 18px 0; }
+    #progress { background: #16a085; height: 100%; border-radius: 8px; transition: width 0.3s; }
+    #stats { margin-bottom: 10px; color: #555; }
+    #next-btn { margin-top: 18px; padding: 10px 22px; font-size: 1em; border: none; border-radius: 8px; background: #2c3e50; color: #fff; cursor: pointer; }
+    #next-btn:disabled { background: #aaa; }
+    #reset-btn { margin-top: 10px; background: #e74c3c; }
+  </style>
+</head>
+<body>
+  <h1>Arabic Quiz Progress Tracker</h1>
+  <div id="stats"></div>
+  <div id="progress-bar"><div id="progress"></div></div>
+  <div id="quiz-box">
+    <div id="question"></div>
+    <div class="choices" id="choices"></div>
+    <button id="next-btn" onclick="nextQuestion()" disabled>Next</button>
+    <button id="reset-btn" onclick="resetProgress()">Reset Progress</button>
+  </div>
+  <script>
+  const wordList = [
+  {
+    "Arabic": "أَهْلٌ",
+    "Root with Vowels": "أَهْلَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Family",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أُو۟لَٰئِكَ",
+    "Root with Vowels": "—",
+    "Root Pattern": "—",
+    "Grammatical Form": "Demonstrative pronoun (plural)",
+    "Verb Form": "—",
+    "English": "Those",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "ءَايَةٌ",
+    "Root with Vowels": "ءَيَيَ",
+    "Root Pattern": "فَعْلَة",
+    "Grammatical Form": "Noun (fem. singular)",
+    "Verb Form": "—",
+    "English": "Verse",
+    "Broken Plural": "sign",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "ءَايَاتٌ",
+    "Root with Vowels": "ءَيَيَ",
+    "Root Pattern": "فَعْلَة",
+    "Grammatical Form": "Noun (fem. plural)",
+    "Verb Form": "—",
+    "English": "Verses",
+    "Broken Plural": "signs",
+    "Broken plural yes": "Yes (جمع تكسير)"
+  },
+  {
+    "Arabic": "أَبٌ",
+    "Root with Vowels": "أَبَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Father",
+    "Broken Plural": "ancestor",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "آبَاءُ",
+    "Root with Vowels": "أَبَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Fathers",
+    "Broken Plural": "ancestors",
+    "Broken plural yes": "Yes (جمع تكسير)"
+  },
+  {
+    "Arabic": "أَتَى",
+    "Root with Vowels": "أَتَى",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He came",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَأْتِي",
+    "Root with Vowels": "أَتَى",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He comes",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَجْرٌ",
+    "Root with Vowels": "أَجَرَ",
+    "Root Pattern": "فَعْل",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Reward",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أُجُورٌ",
+    "Root with Vowels": "أَجَرَ",
+    "Root Pattern": "فُعُول",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Rewards",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَخَذَ",
+    "Root with Vowels": "أَخَذَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He took",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَأْخُذُ",
+    "Root with Vowels": "أَخَذَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He takes",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "ٱتَّخَذَ",
+    "Root with Vowels": "أَخَذَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "VIII",
+    "English": "He adopted",
+    "Broken Plural": "took on",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "يَتَّخِذُ",
+    "Root with Vowels": "أَخَذَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "VIII",
+    "English": "He adopts",
+    "Broken Plural": "takes on",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "بَصَرٌ",
+    "Root with Vowels": "بَصَرَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Sight",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَبْصَارٌ",
+    "Root with Vowels": "بَصَرَ",
+    "Root Pattern": "أَفْعَال",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Sights",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "بَصِيرٌ",
+    "Root with Vowels": "بَصَرَ",
+    "Root Pattern": "فَعِيل",
+    "Grammatical Form": "Adjective (active participle)",
+    "Verb Form": "—",
+    "English": "All-Seeing",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "الْآخِرَةُ",
+    "Root with Vowels": "أَخَرَ",
+    "Root Pattern": "فَاعِل",
+    "Grammatical Form": "Noun (fem. singular)",
+    "Verb Form": "—",
+    "English": "The Hereafter",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "بَعْدَ",
+    "Root with Vowels": "بَعَدَ",
+    "Root Pattern": "فَعْل",
+    "Grammatical Form": "Preposition",
+    "Verb Form": "—",
+    "English": "After",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "بَعِيدٌ",
+    "Root with Vowels": "بَعَدَ",
+    "Root Pattern": "فَعِيل",
+    "Grammatical Form": "Adjective",
+    "Verb Form": "—",
+    "English": "Far",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "ءَاخَرٌ",
+    "Root with Vowels": "أَخَرَ",
+    "Root Pattern": "أَفْعَل",
+    "Grammatical Form": "Adjective (masc. singular)",
+    "Verb Form": "—",
+    "English": "Other",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "ءَاخَرُونَ",
+    "Root with Vowels": "أَخَرَ",
+    "Root Pattern": "أَفْعَل",
+    "Grammatical Form": "Adjective (masc. plural)",
+    "Verb Form": "—",
+    "English": "Others",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أُخْرَى",
+    "Root with Vowels": "أَخَرَ",
+    "Root Pattern": "فُعْلَى",
+    "Grammatical Form": "Adjective (fem. singular)",
+    "Verb Form": "—",
+    "English": "Other (fem.)",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "بَعْضٌ",
+    "Root with Vowels": "بَعَضَ",
+    "Root Pattern": "فَعْل",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Some",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "الأَرْضُ",
+    "Root with Vowels": "أَرَضَ",
+    "Root Pattern": "فَعْل",
+    "Grammatical Form": "Noun (fem. singular)",
+    "Verb Form": "—",
+    "English": "The earth",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "بَيَّنَ",
+    "Root with Vowels": "بَيَنَ",
+    "Root Pattern": "فَعَّلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "II",
+    "English": "He clarified",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يُبَيِّنُ",
+    "Root with Vowels": "بَيَنَ",
+    "Root Pattern": "فَعَّلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "II",
+    "English": "He clarifies",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "بَيِّنَاتٌ",
+    "Root with Vowels": "بَيَنَ",
+    "Root Pattern": "فَعِّيلَات",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Clear signs",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "إِلٰهٌ",
+    "Root with Vowels": "أَلَهَ",
+    "Root Pattern": "فِعَال",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "God",
+    "Broken Plural": "deity",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "آلِهَةٌ",
+    "Root with Vowels": "أَلَهَ",
+    "Root Pattern": "أَفْعِلَة",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Gods",
+    "Broken Plural": "deities",
+    "Broken plural yes": "Yes (جمع تكسير)"
+  },
+  {
+    "Arabic": "اللَّهُ",
+    "Root with Vowels": "أَلَهَ",
+    "Root Pattern": "—",
+    "Grammatical Form": "Proper noun",
+    "Verb Form": "—",
+    "English": "Allah",
+    "Broken Plural": "God",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "ابْنٌ",
+    "Root with Vowels": "بَنَوَ",
+    "Root Pattern": "فِعْل",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Son",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَبْنَاءٌ",
+    "Root with Vowels": "بَنَوَ",
+    "Root Pattern": "أَفْعَال",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Sons",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "بَنُونَ",
+    "Root with Vowels": "بَنَوَ",
+    "Root Pattern": "فَعُول",
+    "Grammatical Form": "Noun (plural masc.)",
+    "Verb Form": "—",
+    "English": "Sons",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "بَنِينَ",
+    "Root with Vowels": "بَنَوَ",
+    "Root Pattern": "فَعِيل",
+    "Grammatical Form": "Noun (plural masc. acc.)",
+    "Verb Form": "—",
+    "English": "Sons",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "بَنَاتٌ",
+    "Root with Vowels": "بَنَوَ",
+    "Root Pattern": "فَعَلات",
+    "Grammatical Form": "Noun (plural fem.)",
+    "Verb Form": "—",
+    "English": "Daughters",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَمِنَ",
+    "Root with Vowels": "أَمَنَ",
+    "Root Pattern": "فَعِلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He was secure",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَأْمَنُ",
+    "Root with Vowels": "أَمَنَ",
+    "Root Pattern": "فَعِلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He is secure",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَمِينٌ",
+    "Root with Vowels": "أَمَنَ",
+    "Root Pattern": "فَعِيل",
+    "Grammatical Form": "Adjective",
+    "Verb Form": "—",
+    "English": "Trustworthy",
+    "Broken Plural": "secure",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "ءَمَنَ",
+    "Root with Vowels": "أَمَنَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "IV",
+    "English": "He believed",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يُؤْمِنُ",
+    "Root with Vowels": "أَمَنَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "IV",
+    "English": "He believes",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مُؤْمِنٌ",
+    "Root with Vowels": "أَمَنَ",
+    "Root Pattern": "فَعِلَ",
+    "Grammatical Form": "Noun (active participle masc.)",
+    "Verb Form": "—",
+    "English": "Believer (male)",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مُؤْمِنُونَ",
+    "Root with Vowels": "أَمَنَ",
+    "Root Pattern": "فَعِلَ",
+    "Grammatical Form": "Noun (masc. plural)",
+    "Verb Form": "—",
+    "English": "Believers (male)",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مُؤْمِنَةٌ",
+    "Root with Vowels": "أَمَنَ",
+    "Root Pattern": "فَعِلَ",
+    "Grammatical Form": "Noun (active participle fem.)",
+    "Verb Form": "—",
+    "English": "Believer (female)",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مُؤْمِنَاتٌ",
+    "Root with Vowels": "أَمَنَ",
+    "Root Pattern": "فَعِلَ",
+    "Grammatical Form": "Noun (fem. plural)",
+    "Verb Form": "—",
+    "English": "Believers (female)",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "إِيمَانٌ",
+    "Root with Vowels": "أَمَنَ",
+    "Root Pattern": "فِعَال",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Faith",
+    "Broken Plural": "belief",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "إِنْسَانُ",
+    "Root with Vowels": "أَنَسَ",
+    "Root Pattern": "فِعْلَان",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Human being",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "نَاسٌ",
+    "Root with Vowels": "أَنَسَ",
+    "Root Pattern": "فَعَال",
+    "Grammatical Form": "Noun (collective)",
+    "Verb Form": "—",
+    "English": "Mankind",
+    "Broken Plural": "people",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "حَيَاةٌ",
+    "Root with Vowels": "حَيَيَ",
+    "Root Pattern": "فَعَالَة",
+    "Grammatical Form": "Noun (fem. singular)",
+    "Verb Form": "—",
+    "English": "Life",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "حَىٌّ",
+    "Root with Vowels": "حَيَيَ",
+    "Root Pattern": "فَعِل",
+    "Grammatical Form": "Noun (active participle)",
+    "Verb Form": "—",
+    "English": "Living being",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَحْيَاءٌ",
+    "Root with Vowels": "حَيَيَ",
+    "Root Pattern": "أَفْعَال",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Living beings",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "الْحَيُّ",
+    "Root with Vowels": "حَيَيَ",
+    "Root Pattern": "فَعِل",
+    "Grammatical Form": "Divine name",
+    "Verb Form": "—",
+    "English": "The Ever-Living",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَحْيَا",
+    "Root with Vowels": "حَيَيَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "IV",
+    "English": "He gave life",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يُحْيِي",
+    "Root with Vowels": "حَيَيَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "IV",
+    "English": "He gives life",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "خَرَجَ",
+    "Root with Vowels": "خَرَجَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He went out",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَخْرُجُ",
+    "Root with Vowels": "خَرَجَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He goes out",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "خُرُوجٌ",
+    "Root with Vowels": "خَرَجَ",
+    "Root Pattern": "فُعُول",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Exit",
+    "Broken Plural": "going out",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "أَخْرَجَ",
+    "Root with Vowels": "خَرَجَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "IV",
+    "English": "He brought forth",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يُخْرِجُ",
+    "Root with Vowels": "خَرَجَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "IV",
+    "English": "He brings forth",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "إِخْرَاجٌ",
+    "Root with Vowels": "خَرَجَ",
+    "Root Pattern": "إِفْعَال",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Expulsion",
+    "Broken Plural": "bringing forth",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "خَلَفَ",
+    "Root with Vowels": "خَلَفَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He was behind",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَخْلُفُ",
+    "Root with Vowels": "خَلَفَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He is behind",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "خَلْفَ",
+    "Root with Vowels": "خَلَفَ",
+    "Root Pattern": "فَعْل",
+    "Grammatical Form": "Preposition",
+    "Verb Form": "—",
+    "English": "Behind",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "خَلَّفَ",
+    "Root with Vowels": "خَلَفَ",
+    "Root Pattern": "فَعَّلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "II",
+    "English": "He appointed as successor",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يُخَلِّفُ",
+    "Root with Vowels": "خَلَفَ",
+    "Root Pattern": "فَعَّلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "II",
+    "English": "He appoints as successor",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "خَالَفَ",
+    "Root with Vowels": "خَلَفَ",
+    "Root Pattern": "فَاعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "III",
+    "English": "He disagreed",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يُخَالِفُ",
+    "Root with Vowels": "خَلَفَ",
+    "Root Pattern": "فَاعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "III",
+    "English": "He disagrees",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "اخْتَلَفَ",
+    "Root with Vowels": "خَلَفَ",
+    "Root Pattern": "VIII",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "VIII",
+    "English": "He differed",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَخْتَلِفُ",
+    "Root with Vowels": "خَلَفَ",
+    "Root Pattern": "VIII",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "VIII",
+    "English": "He differs",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "اخْتِلَافٌ",
+    "Root with Vowels": "خَلَفَ",
+    "Root Pattern": "VIII",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Disagreement",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "اسْتَخْلَفَ",
+    "Root with Vowels": "خَلَفَ",
+    "Root Pattern": "X",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "X",
+    "English": "He appointed as successor",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَسْتَخْلِفُ",
+    "Root with Vowels": "خَلَفَ",
+    "Root Pattern": "X",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "X",
+    "English": "He appoints as successor",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "خَلَقَ",
+    "Root with Vowels": "خَلَقَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He created",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَخْلُقُ",
+    "Root with Vowels": "خَلَقَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He creates",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "خَلْقٌ",
+    "Root with Vowels": "خَلَقَ",
+    "Root Pattern": "فَعْل",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Creation",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "خَالِقٌ",
+    "Root with Vowels": "خَلَقَ",
+    "Root Pattern": "فَاعِل",
+    "Grammatical Form": "Noun (active participle)",
+    "Verb Form": "—",
+    "English": "Creator",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "الْخَالِقُ",
+    "Root with Vowels": "خَلَقَ",
+    "Root Pattern": "فَاعِل",
+    "Grammatical Form": "Divine name",
+    "Verb Form": "—",
+    "English": "The Creator",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "خَافَ",
+    "Root with Vowels": "خَوَفَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He feared",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَخَافُ",
+    "Root with Vowels": "خَوَفَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He fears",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "خَوْفٌ",
+    "Root with Vowels": "خَوَفَ",
+    "Root Pattern": "فَعْل",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Fear",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "حِكْمَةٌ",
+    "Root with Vowels": "حَكَمَ",
+    "Root Pattern": "فِعْلَة",
+    "Grammatical Form": "Noun (fem. singular)",
+    "Verb Form": "—",
+    "English": "Wisdom",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "الْحَكِيمُ",
+    "Root with Vowels": "حَكَمَ",
+    "Root Pattern": "فَعِيل",
+    "Grammatical Form": "Divine name",
+    "Verb Form": "—",
+    "English": "The Most Wise",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "حَكَمَ",
+    "Root with Vowels": "حَكَمَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He judged",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَحْكُمُ",
+    "Root with Vowels": "حَكَمَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He judges",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "حُكْمٌ",
+    "Root with Vowels": "حَكَمَ",
+    "Root Pattern": "فُعْل",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Judgment",
+    "Broken Plural": "ruling",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "جَزَى",
+    "Root with Vowels": "جَزَيَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He rewarded",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَجْزِي",
+    "Root with Vowels": "جَزَيَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He rewards",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "جَزَاءٌ",
+    "Root with Vowels": "جَزَيَ",
+    "Root Pattern": "فَعَال",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Reward",
+    "Broken Plural": "recompense",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "جَعَلَ",
+    "Root with Vowels": "جَعَلَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He made",
+    "Broken Plural": "appointed",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "يَجْعَلُ",
+    "Root with Vowels": "جَعَلَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He makes",
+    "Broken Plural": "appoints",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "جَمَعَ",
+    "Root with Vowels": "جَمَعَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He gathered",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَجْمَعُ",
+    "Root with Vowels": "جَمَعَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He gathers",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "جَمِيعًا",
+    "Root with Vowels": "جَمَعَ",
+    "Root Pattern": "فَعِيل",
+    "Grammatical Form": "Adverbial noun",
+    "Verb Form": "—",
+    "English": "Together",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَجْمَعِينَ",
+    "Root with Vowels": "جَمَعَ",
+    "Root Pattern": "أَفْعَلِين",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "All together",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "جَنَّةٌ",
+    "Root with Vowels": "جَنَنَ",
+    "Root Pattern": "فَعَّلَ",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Garden",
+    "Broken Plural": "Paradise",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "جَنَّاتٌ",
+    "Root with Vowels": "جَنَنَ",
+    "Root Pattern": "فَعَّلَ",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Gardens",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "الْجَنَّةُ",
+    "Root with Vowels": "جَنَنَ",
+    "Root Pattern": "فَعَّلَ",
+    "Grammatical Form": "Proper noun",
+    "Verb Form": "—",
+    "English": "Paradise",
+    "Broken Plural": "The Garden",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "جَاءَ",
+    "Root with Vowels": "جَيَءَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He came",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَجِيءُ",
+    "Root with Vowels": "جَيَءَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He comes",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "حَتَّى",
+    "Root with Vowels": "حَتَيَ",
+    "Root Pattern": "—",
+    "Grammatical Form": "Particle",
+    "Verb Form": "—",
+    "English": "Until",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "حَسِبَ",
+    "Root with Vowels": "حَسَبَ",
+    "Root Pattern": "فَعِلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He thought",
+    "Broken Plural": "reckoned",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "يَحْسَبُ",
+    "Root with Vowels": "حَسَبَ",
+    "Root Pattern": "فَعِلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He thinks",
+    "Broken Plural": "reckons",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "حِسَابٌ",
+    "Root with Vowels": "حَسَبَ",
+    "Root Pattern": "فِعَال",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Account",
+    "Broken Plural": "reckoning",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "حَسَنَ",
+    "Root with Vowels": "حَسَنَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He was good",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "حَسَنَةٌ",
+    "Root with Vowels": "حَسَنَ",
+    "Root Pattern": "فَعَلَة",
+    "Grammatical Form": "Noun (fem. singular)",
+    "Verb Form": "—",
+    "English": "Good deed",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "حَسَنَاتٌ",
+    "Root with Vowels": "حَسَنَ",
+    "Root Pattern": "فَعَلَة",
+    "Grammatical Form": "Noun (fem. plural)",
+    "Verb Form": "—",
+    "English": "Good deeds",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَحْسَنُ",
+    "Root with Vowels": "حَسَنَ",
+    "Root Pattern": "أَفْعَل",
+    "Grammatical Form": "Adjective (comparative)",
+    "Verb Form": "—",
+    "English": "Better",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَحْسَنَ",
+    "Root with Vowels": "حَسَنَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "IV",
+    "English": "He did good",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يُحْسِنُ",
+    "Root with Vowels": "حَسَنَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "IV",
+    "English": "He does good",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مُحْسِنٌ",
+    "Root with Vowels": "حَسَنَ",
+    "Root Pattern": "فَاعِل",
+    "Grammatical Form": "Noun (active participle masc.)",
+    "Verb Form": "—",
+    "English": "Doer of good",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مُحْسِنُونَ",
+    "Root with Vowels": "حَسَنَ",
+    "Root Pattern": "فَاعِل",
+    "Grammatical Form": "Noun (masc. plural)",
+    "Verb Form": "—",
+    "English": "Doers of good",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "حَقٌّ",
+    "Root with Vowels": "حَقَقَ",
+    "Root Pattern": "فَعْل",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Truth",
+    "Broken Plural": "right",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "الْحَقُّ",
+    "Root with Vowels": "حَقَقَ",
+    "Root Pattern": "فَعْل",
+    "Grammatical Form": "Divine name",
+    "Verb Form": "—",
+    "English": "The Truth",
+    "Broken Plural": "Reality",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "أَحَقُّ",
+    "Root with Vowels": "حَقَقَ",
+    "Root Pattern": "أَفْعَل",
+    "Grammatical Form": "Adjective (comparative)",
+    "Verb Form": "—",
+    "English": "More deserving",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "حَكَمَ",
+    "Root with Vowels": "حَكَمَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He judged",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَحْكُمُ",
+    "Root with Vowels": "حَكَمَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He judges",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "خَافَ",
+    "Root with Vowels": "خَوَفَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He feared",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَخَافُ",
+    "Root with Vowels": "خَوَفَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He fears",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "خَوْفٌ",
+    "Root with Vowels": "خَوَفَ",
+    "Root Pattern": "فَعْل",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Fear",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "رَأْيٌ",
+    "Root with Vowels": "رَأَيَ",
+    "Root Pattern": "فَعْل",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Opinion",
+    "Broken Plural": "sighting",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "أَرَى",
+    "Root with Vowels": "رَأَيَ",
+    "Root Pattern": "أَفْعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "IV",
+    "English": "He showed",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يُرِي",
+    "Root with Vowels": "رَأَيَ",
+    "Root Pattern": "أَفْعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "IV",
+    "English": "He shows",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "خَيْرٌ",
+    "Root with Vowels": "خَيَرَ",
+    "Root Pattern": "فَعْل",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Good",
+    "Broken Plural": "better",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "خَيْرٌ مِن",
+    "Root with Vowels": "خَيَرَ",
+    "Root Pattern": "فَعْل",
+    "Grammatical Form": "Comparative phrase",
+    "Verb Form": "—",
+    "English": "Better than",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "رِيَاءٌ",
+    "Root with Vowels": "رَأَيَ",
+    "Root Pattern": "فِعَال",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Ostentation",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "خَيْرَاتٌ",
+    "Root with Vowels": "خَيَرَ",
+    "Root Pattern": "فَعْلَات",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Good deeds",
+    "Broken Plural": "charity",
+    "Broken plural yes": "Yes (جمع تكسير)"
+  },
+  {
+    "Arabic": "رَبٌّ",
+    "Root with Vowels": "رَبَبَ",
+    "Root Pattern": "فَعْل",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Lord",
+    "Broken Plural": "Sustainer",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "رَجَعَ",
+    "Root with Vowels": "رَجَعَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He returned",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يُرْجِعُ",
+    "Root with Vowels": "رَجَعَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "IV",
+    "English": "He returns (transitive)",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مَرْجِعٌ",
+    "Root with Vowels": "رَجَعَ",
+    "Root Pattern": "مَفْعِل",
+    "Grammatical Form": "Noun (place/time)",
+    "Verb Form": "—",
+    "English": "A return",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "دَخَلَ",
+    "Root with Vowels": "دَخَلَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He entered",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَدْخُلُ",
+    "Root with Vowels": "دَخَلَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He enters",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَدْخَلَ",
+    "Root with Vowels": "دَخَلَ",
+    "Root Pattern": "أَفْعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "IV",
+    "English": "He caused to enter",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يُدْخِلُ",
+    "Root with Vowels": "دَخَلَ",
+    "Root Pattern": "أَفْعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "IV",
+    "English": "He causes to enter",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "رَحِمَ",
+    "Root with Vowels": "رَحَمَ",
+    "Root Pattern": "فَعِلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He was merciful",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَرْحَمُ",
+    "Root with Vowels": "رَحَمَ",
+    "Root Pattern": "فَعِلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He is merciful",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "رَحْمَةٌ",
+    "Root with Vowels": "رَحَمَ",
+    "Root Pattern": "فَعْلَة",
+    "Grammatical Form": "Noun (fem. singular)",
+    "Verb Form": "—",
+    "English": "Mercy",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "الرَّحْمَنُ",
+    "Root with Vowels": "رَحَمَ",
+    "Root Pattern": "فَعْلان",
+    "Grammatical Form": "Divine name",
+    "Verb Form": "—",
+    "English": "The Most Gracious",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "الرَّحِيمُ",
+    "Root with Vowels": "رَحَمَ",
+    "Root Pattern": "فَعِيل",
+    "Grammatical Form": "Divine name",
+    "Verb Form": "—",
+    "English": "The Most Merciful",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "الدُّنْيَا",
+    "Root with Vowels": "دَنَوَ",
+    "Root Pattern": "فُعْلَى",
+    "Grammatical Form": "Noun (fem. singular)",
+    "Verb Form": "—",
+    "English": "The world",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "حَيَاةُ الدُّنْيَا",
+    "Root with Vowels": "ح-ي-ي / د-ن-و",
+    "Root Pattern": "فَعَالَة + فُعْلَى",
+    "Grammatical Form": "Phrase (noun + genitive)",
+    "Verb Form": "—",
+    "English": "The life of this world",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "رَزَقَ",
+    "Root with Vowels": "رَزَقَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He provided",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَرْزُقُ",
+    "Root with Vowels": "رَزَقَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He provides",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "رِزْقٌ",
+    "Root with Vowels": "رَزَقَ",
+    "Root Pattern": "فِعْل",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Sustenance",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "الرَّزَّاقُ",
+    "Root with Vowels": "رَزَقَ",
+    "Root Pattern": "فَعَّال",
+    "Grammatical Form": "Divine name",
+    "Verb Form": "—",
+    "English": "The Provider",
+    "Broken Plural": "Sustainer",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "دُونَ",
+    "Root with Vowels": "دَوَنَ",
+    "Root Pattern": "—",
+    "Grammatical Form": "Preposition",
+    "Verb Form": "—",
+    "English": "Without",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "الدِّينُ",
+    "Root with Vowels": "دَيَنَ",
+    "Root Pattern": "فِعْل",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Religion",
+    "Broken Plural": "judgment",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "دَيْنٌ",
+    "Root with Vowels": "دَيَنَ",
+    "Root Pattern": "فَعْل",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Debt",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَرْسَلَ",
+    "Root with Vowels": "رَسَلَ",
+    "Root Pattern": "أَفْعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "IV",
+    "English": "He sent",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يُرْسِلُ",
+    "Root with Vowels": "رَسَلَ",
+    "Root Pattern": "أَفْعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "IV",
+    "English": "He sends",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مُرْسَلٌ",
+    "Root with Vowels": "رَسَلَ",
+    "Root Pattern": "مُفْعَل",
+    "Grammatical Form": "Passive participle (singular)",
+    "Verb Form": "—",
+    "English": "Messenger (passive)",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مُرْسَلُونَ",
+    "Root with Vowels": "رَسَلَ",
+    "Root Pattern": "مُفْعَل",
+    "Grammatical Form": "Passive participle (plural)",
+    "Verb Form": "—",
+    "English": "Messengers (passive)",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "رَسُولٌ",
+    "Root with Vowels": "رَسَلَ",
+    "Root Pattern": "فَعُول",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Messenger",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "رُسُلٌ",
+    "Root with Vowels": "رَسَلَ",
+    "Root Pattern": "فُعُل",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Messengers",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "رِسَالَةٌ",
+    "Root with Vowels": "رَسَلَ",
+    "Root Pattern": "فِعَالَة",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Message",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "رِسَالَاتٌ",
+    "Root with Vowels": "رَسَلَ",
+    "Root Pattern": "فِعَالَة",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Messages",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "ذَكَرَ",
+    "Root with Vowels": "ذَكَرَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He mentioned",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَذْكُرُ",
+    "Root with Vowels": "ذَكَرَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He mentions",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "ذِكْرٌ",
+    "Root with Vowels": "ذَكَرَ",
+    "Root Pattern": "فِعْل",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Mention",
+    "Broken Plural": "remembrance",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "ذَكَّرَ",
+    "Root with Vowels": "ذَكَرَ",
+    "Root Pattern": "فَعَّلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "II",
+    "English": "He reminded",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يُذَكِّرُ",
+    "Root with Vowels": "ذَكَرَ",
+    "Root Pattern": "فَعَّلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "II",
+    "English": "He reminds",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "تَذَكَّرَ",
+    "Root with Vowels": "ذَكَرَ",
+    "Root Pattern": "تَفَعَّلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "V",
+    "English": "He reminded himself",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَتَذَكَّرُ",
+    "Root with Vowels": "ذَكَرَ",
+    "Root Pattern": "تَفَعَّلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "V",
+    "English": "He reminds himself",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "ذَكَرٌ",
+    "Root with Vowels": "ذَكَرَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Noun (masc. singular)",
+    "Verb Form": "—",
+    "English": "Male",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "ذُكُورٌ",
+    "Root with Vowels": "ذَكَرَ",
+    "Root Pattern": "فُعُول",
+    "Grammatical Form": "Noun (masc. plural)",
+    "Verb Form": "—",
+    "English": "Males",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "سَأَلَ",
+    "Root with Vowels": "سَأَلَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He asked",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَسْأَلُ",
+    "Root with Vowels": "سَأَلَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He asks",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "سُؤَالٌ",
+    "Root with Vowels": "سَأَلَ",
+    "Root Pattern": "فُعَال",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Question",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "سَائِلٌ",
+    "Root with Vowels": "سَأَلَ",
+    "Root Pattern": "فَاعِل",
+    "Grammatical Form": "Noun (active participle masc.)",
+    "Verb Form": "—",
+    "English": "Questioner",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "سَائِلُونَ",
+    "Root with Vowels": "سَأَلَ",
+    "Root Pattern": "فَاعِل",
+    "Grammatical Form": "Noun (masc. plural)",
+    "Verb Form": "—",
+    "English": "Questioners",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مَسْؤُولٌ",
+    "Root with Vowels": "سَأَلَ",
+    "Root Pattern": "مَفْعُول",
+    "Grammatical Form": "Passive participle",
+    "Verb Form": "—",
+    "English": "One questioned",
+    "Broken Plural": "responsible",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "مَسْؤُولُونَ",
+    "Root with Vowels": "سَأَلَ",
+    "Root Pattern": "مَفْعُول",
+    "Grammatical Form": "Passive participle plural",
+    "Verb Form": "—",
+    "English": "Responsible persons",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "تَسَاءَلَ",
+    "Root with Vowels": "سَأَلَ",
+    "Root Pattern": "تَفَاعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "VI",
+    "English": "They asked one another",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَتَسَاءَلُ",
+    "Root with Vowels": "سَأَلَ",
+    "Root Pattern": "تَفَاعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "VI",
+    "English": "They ask one another",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "ذُو / ذَا / ذِي",
+    "Root with Vowels": "—",
+    "Root Pattern": "—",
+    "Grammatical Form": "Possessive particle",
+    "Verb Form": "—",
+    "English": "Possessor (nom./acc./gen.)",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "رَأَى",
+    "Root with Vowels": "رَأَيَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He saw",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَرَى",
+    "Root with Vowels": "رَأَيَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He sees",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "شَهِدَ",
+    "Root with Vowels": "شَهَدَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He witnessed",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَشْهَدُ",
+    "Root with Vowels": "شَهَدَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He witnesses",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَشْهَدَ",
+    "Root with Vowels": "شَهَدَ",
+    "Root Pattern": "أَفْعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "IV",
+    "English": "He made witness",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يُشْهِدُ",
+    "Root with Vowels": "شَهَدَ",
+    "Root Pattern": "أَفْعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "IV",
+    "English": "He makes witness",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "اِسْتَشْهَدَ",
+    "Root with Vowels": "شَهَدَ",
+    "Root Pattern": "X",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "X",
+    "English": "He called as witness",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "شَهَادَةٌ",
+    "Root with Vowels": "شَهَدَ",
+    "Root Pattern": "فَعَالَة",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Testimony",
+    "Broken Plural": "martyrdom",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "شَاهِدٌ",
+    "Root with Vowels": "شَهَدَ",
+    "Root Pattern": "فَاعِل",
+    "Grammatical Form": "Noun (active participle)",
+    "Verb Form": "—",
+    "English": "Witness",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "شَاهِدُونَ",
+    "Root with Vowels": "شَهَدَ",
+    "Root Pattern": "فَاعِل",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Witnesses",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "شَهِيدٌ",
+    "Root with Vowels": "شَهَدَ",
+    "Root Pattern": "فَعِيل",
+    "Grammatical Form": "Noun",
+    "Verb Form": "—",
+    "English": "Martyr",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "شُهَدَاءُ",
+    "Root with Vowels": "شَهَدَ",
+    "Root Pattern": "فُعَلَاء",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Martyrs",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَسْلَمَ",
+    "Root with Vowels": "سَلَمَ",
+    "Root Pattern": "أَفْعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "IV",
+    "English": "He submitted",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يُسْلِمُ",
+    "Root with Vowels": "سَلَمَ",
+    "Root Pattern": "أَفْعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "IV",
+    "English": "He submits",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "إِسْلَامٌ",
+    "Root with Vowels": "سَلَمَ",
+    "Root Pattern": "إِفْعَال",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Submission",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "الْإِسْلَامُ",
+    "Root with Vowels": "سَلَمَ",
+    "Root Pattern": "إِفْعَال",
+    "Grammatical Form": "Proper noun",
+    "Verb Form": "—",
+    "English": "Islam",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مُسْلِمٌ",
+    "Root with Vowels": "سَلَمَ",
+    "Root Pattern": "مُفْعِل",
+    "Grammatical Form": "Noun (active participle masc.)",
+    "Verb Form": "—",
+    "English": "Muslim (male)",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مُسْلِمُونَ",
+    "Root with Vowels": "سَلَمَ",
+    "Root Pattern": "مُفْعِل",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Muslims (male)",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مُسْلِمَةٌ",
+    "Root with Vowels": "سَلَمَ",
+    "Root Pattern": "مُفْعِلَة",
+    "Grammatical Form": "Noun (active participle fem.)",
+    "Verb Form": "—",
+    "English": "Muslimah",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مُسْلِمَاتٌ",
+    "Root with Vowels": "سَلَمَ",
+    "Root Pattern": "مُفْعِلَة",
+    "Grammatical Form": "Noun (plural fem.)",
+    "Verb Form": "—",
+    "English": "Muslim women",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "سَلَامٌ",
+    "Root with Vowels": "سَلَمَ",
+    "Root Pattern": "فَعَال",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Peace",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "شَاءَ",
+    "Root with Vowels": "شَيَءَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He willed",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَشَاءُ",
+    "Root with Vowels": "شَيَءَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He wills",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "سَمِعَ",
+    "Root with Vowels": "سَمَعَ",
+    "Root Pattern": "فَعِلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He heard",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَسْمَعُ",
+    "Root with Vowels": "سَمَعَ",
+    "Root Pattern": "فَعِلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He hears",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "سَمْعٌ",
+    "Root with Vowels": "سَمَعَ",
+    "Root Pattern": "فَعْل",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Hearing",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "السَّمِيعُ",
+    "Root with Vowels": "سَمَعَ",
+    "Root Pattern": "فَعِيل",
+    "Grammatical Form": "Divine name",
+    "Verb Form": "—",
+    "English": "The All-Hearing",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "اِسْتَمَعَ",
+    "Root with Vowels": "سَمَعَ",
+    "Root Pattern": "VIII",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "VIII",
+    "English": "He listened",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَسْتَمِعُ",
+    "Root with Vowels": "سَمَعَ",
+    "Root Pattern": "VIII",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "VIII",
+    "English": "He listens",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مُسْتَمِعٌ",
+    "Root with Vowels": "سَمَعَ",
+    "Root Pattern": "VIII",
+    "Grammatical Form": "Noun (active participle)",
+    "Verb Form": "—",
+    "English": "Listener",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مُسْتَمِعُونَ",
+    "Root with Vowels": "سَمَعَ",
+    "Root Pattern": "VIII",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Listeners",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "صَبَرَ",
+    "Root with Vowels": "صَبَرَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He was patient",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَصْبِرُ",
+    "Root with Vowels": "صَبَرَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He is patient",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "صَبْرٌ",
+    "Root with Vowels": "صَبَرَ",
+    "Root Pattern": "فَعْل",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Patience",
+    "Broken Plural": "steadfastness",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "صَابِرٌ",
+    "Root with Vowels": "صَبَرَ",
+    "Root Pattern": "فَاعِل",
+    "Grammatical Form": "Noun (active participle masc.)",
+    "Verb Form": "—",
+    "English": "Steadfast person (male)",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "صَابِرُونَ",
+    "Root with Vowels": "صَبَرَ",
+    "Root Pattern": "فَاعِل",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Steadfast people (male)",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "صَابِرَةٌ",
+    "Root with Vowels": "صَبَرَ",
+    "Root Pattern": "فَاعِلَة",
+    "Grammatical Form": "Noun (active participle fem.)",
+    "Verb Form": "—",
+    "English": "Steadfast person (female)",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "صَابِرَاتٌ",
+    "Root with Vowels": "صَبَرَ",
+    "Root Pattern": "فَاعِلَة",
+    "Grammatical Form": "Noun (plural fem.)",
+    "Verb Form": "—",
+    "English": "Steadfast people (female)",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "صَبَّارٌ",
+    "Root with Vowels": "صَبَرَ",
+    "Root Pattern": "فَعَّال",
+    "Grammatical Form": "Noun (intensive)",
+    "Verb Form": "—",
+    "English": "Very steadfast person",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "سَاءَ",
+    "Root with Vowels": "سَوَءَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He was evil",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَسُوءُ",
+    "Root with Vowels": "سَوَءَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He is evil",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "سُوءٌ",
+    "Root with Vowels": "سَوَءَ",
+    "Root Pattern": "فُعْل",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Evil",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "سَيِّئَةٌ",
+    "Root with Vowels": "سَوَءَ",
+    "Root Pattern": "فَعِيلَة",
+    "Grammatical Form": "Noun (fem. singular)",
+    "Verb Form": "—",
+    "English": "Evil deed",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "سَيِّئَاتٌ",
+    "Root with Vowels": "سَوَءَ",
+    "Root Pattern": "فَعِيلَة",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Evil deeds",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "صَدَقَ",
+    "Root with Vowels": "صَدَقَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He spoke the truth",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَصْدُقُ",
+    "Root with Vowels": "صَدَقَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He speaks the truth",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "صِدْقٌ",
+    "Root with Vowels": "صَدَقَ",
+    "Root Pattern": "فِعْل",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Truthfulness",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "صَادِقٌ",
+    "Root with Vowels": "صَدَقَ",
+    "Root Pattern": "فَاعِل",
+    "Grammatical Form": "Noun (active participle)",
+    "Verb Form": "—",
+    "English": "Truthful person (male)",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "صَادِقُونَ",
+    "Root with Vowels": "صَدَقَ",
+    "Root Pattern": "فَاعِل",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Truthful people (male)",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "صَدَقَةٌ",
+    "Root with Vowels": "صَدَقَ",
+    "Root Pattern": "فَعَلَة",
+    "Grammatical Form": "Noun (fem. singular)",
+    "Verb Form": "—",
+    "English": "Charity",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "صَدَقَاتٌ",
+    "Root with Vowels": "صَدَقَ",
+    "Root Pattern": "فَعَلَة",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Charities",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "صَلَحَ",
+    "Root with Vowels": "صَلَحَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He was righteous",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَصْلَحَ",
+    "Root with Vowels": "صَلَحَ",
+    "Root Pattern": "أَفْعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "IV",
+    "English": "He reformed",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يُصْلِحُ",
+    "Root with Vowels": "صَلَحَ",
+    "Root Pattern": "أَفْعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "IV",
+    "English": "He reforms",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "إِصْلَاحٌ",
+    "Root with Vowels": "صَلَحَ",
+    "Root Pattern": "إِفْعَال",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Reform",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "صَالِحٌ",
+    "Root with Vowels": "صَلَحَ",
+    "Root Pattern": "فَاعِل",
+    "Grammatical Form": "Noun (active participle)",
+    "Verb Form": "—",
+    "English": "Righteous person (male)",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "صَالِحُونَ",
+    "Root with Vowels": "صَلَحَ",
+    "Root Pattern": "فَاعِل",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Righteous people (male)",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "الصَّالِحَاتُ",
+    "Root with Vowels": "صَلَحَ",
+    "Root Pattern": "فَاعِلَات",
+    "Grammatical Form": "Noun (plural fem.)",
+    "Verb Form": "—",
+    "English": "Righteous deeds",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَشْرَكَ",
+    "Root with Vowels": "شَرَكَ",
+    "Root Pattern": "أَفْعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "IV",
+    "English": "He associated (others with God)",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يُشْرِكُ",
+    "Root with Vowels": "شَرَكَ",
+    "Root Pattern": "أَفْعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "IV",
+    "English": "He associates (others with God)",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "شِرْكٌ",
+    "Root with Vowels": "شَرَكَ",
+    "Root Pattern": "فِعْل",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Polytheism",
+    "Broken Plural": "association",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "شَرِيكٌ",
+    "Root with Vowels": "شَرَكَ",
+    "Root Pattern": "فَعِيل",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Partner",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "شُرَكَاءُ",
+    "Root with Vowels": "شَرَكَ",
+    "Root Pattern": "فُعَلَاء",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Partners",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مُشْرِكٌ",
+    "Root with Vowels": "شَرَكَ",
+    "Root Pattern": "مُفْعِل",
+    "Grammatical Form": "Noun (active participle masc.)",
+    "Verb Form": "—",
+    "English": "Polytheist (male)",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مُشْرِكُونَ",
+    "Root with Vowels": "شَرَكَ",
+    "Root Pattern": "مُفْعِل",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Polytheists (male)",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مُشْرِكَةٌ",
+    "Root with Vowels": "شَرَكَ",
+    "Root Pattern": "مُفْعِلَة",
+    "Grammatical Form": "Noun (active participle fem.)",
+    "Verb Form": "—",
+    "English": "Polytheist (female)",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مُشْرِكَاتٌ",
+    "Root with Vowels": "شَرَكَ",
+    "Root Pattern": "مُفْعِلَة",
+    "Grammatical Form": "Noun (plural fem.)",
+    "Verb Form": "—",
+    "English": "Polytheists (female)",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "عِبَادَةٌ",
+    "Root with Vowels": "عَبَدَ",
+    "Root Pattern": "فِعَالَة",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Worship",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "عَبَدَ",
+    "Root with Vowels": "عَبَدَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He worshipped",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَعْبُدُ",
+    "Root with Vowels": "عَبَدَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He worships",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "عَبْدٌ",
+    "Root with Vowels": "عَبَدَ",
+    "Root Pattern": "فَعْل",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Servant",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "عِبَادٌ",
+    "Root with Vowels": "عَبَدَ",
+    "Root Pattern": "فِعَال",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Servants",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "عَبِيدٌ",
+    "Root with Vowels": "عَبَدَ",
+    "Root Pattern": "فَعِيل",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Slaves",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "اعْتَدَى",
+    "Root with Vowels": "عَدَوَ",
+    "Root Pattern": "VIII",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "VIII",
+    "English": "He transgressed",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَعْتَدِي",
+    "Root with Vowels": "عَدَوَ",
+    "Root Pattern": "VIII",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "VIII",
+    "English": "He transgresses",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "عَدَاوَةٌ",
+    "Root with Vowels": "عَدَوَ",
+    "Root Pattern": "فَعَالَة",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Enmity",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "عَدُوٌّ",
+    "Root with Vowels": "عَدَوَ",
+    "Root Pattern": "فَعُول",
+    "Grammatical Form": "Noun (singular)",
+    "Verb Form": "—",
+    "English": "Enemy",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَعْدَاءٌ",
+    "Root with Vowels": "عَدَوَ",
+    "Root Pattern": "أَفْعَال",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Enemies",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "ظَلَمَ",
+    "Root with Vowels": "ظَلَمَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He wronged",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَظْلِمُ",
+    "Root with Vowels": "ظَلَمَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He wrongs",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "ظُلْمٌ",
+    "Root with Vowels": "ظَلَمَ",
+    "Root Pattern": "فُعْل",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Injustice",
+    "Broken Plural": "tyranny",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "ظَالِمٌ",
+    "Root with Vowels": "ظَلَمَ",
+    "Root Pattern": "فَاعِل",
+    "Grammatical Form": "Noun (active participle)",
+    "Verb Form": "—",
+    "English": "Wrongdoer",
+    "Broken Plural": "tyrant",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "ظَالِمُونَ",
+    "Root with Vowels": "ظَلَمَ",
+    "Root Pattern": "فَاعِل",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Wrongdoers",
+    "Broken Plural": "Sound plural",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَظْلَمَ",
+    "Root with Vowels": "ظَلَمَ",
+    "Root Pattern": "أَفْعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "IV",
+    "English": "He darkened",
+    "Broken Plural": "injured",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "يُظْلِمُ",
+    "Root with Vowels": "ظَلَمَ",
+    "Root Pattern": "أَفْعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "IV",
+    "English": "He darkens",
+    "Broken Plural": "injures",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "ظُلُمَاتٌ",
+    "Root with Vowels": "ظَلَمَ",
+    "Root Pattern": "فُعُلَات",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Darknesses",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "عَلِمَ",
+    "Root with Vowels": "عَلَمَ",
+    "Root Pattern": "فَعِلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He knew",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَعْلَمُ",
+    "Root with Vowels": "عَلَمَ",
+    "Root Pattern": "فَعِلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He knows",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "عِلْمٌ",
+    "Root with Vowels": "عَلَمَ",
+    "Root Pattern": "فِعْل",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Knowledge",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "عَالِمٌ",
+    "Root with Vowels": "عَلَمَ",
+    "Root Pattern": "فَاعِل",
+    "Grammatical Form": "Noun (active participle)",
+    "Verb Form": "—",
+    "English": "Scholar",
+    "Broken Plural": "knower",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "عُلَمَاءُ",
+    "Root with Vowels": "عَلَمَ",
+    "Root Pattern": "فُعَلَاء",
+    "Grammatical Form": "Noun (plural)",
+    "Verb Form": "—",
+    "English": "Scholars",
+    "Broken Plural": "Yes (جمع تكسير)",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "أَعْلَمُ",
+    "Root with Vowels": "عَلَمَ",
+    "Root Pattern": "أَفْعَل",
+    "Grammatical Form": "Adjective (comparative)",
+    "Verb Form": "—",
+    "English": "More knowledgeable",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "مَعْلُومٌ",
+    "Root with Vowels": "عَلَمَ",
+    "Root Pattern": "مَفْعُول",
+    "Grammatical Form": "Passive participle",
+    "Verb Form": "—",
+    "English": "Known",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "الْعَلِيمُ",
+    "Root with Vowels": "عَلَمَ",
+    "Root Pattern": "فَعِيل",
+    "Grammatical Form": "Divine name",
+    "Verb Form": "—",
+    "English": "The All-Knowing",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "عَلَّمَ",
+    "Root with Vowels": "عَلَمَ",
+    "Root Pattern": "فَعَّلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "II",
+    "English": "He taught",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يُعَلِّمُ",
+    "Root with Vowels": "عَلَمَ",
+    "Root Pattern": "فَعَّلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "II",
+    "English": "He teaches",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "تَعَلَّمَ",
+    "Root with Vowels": "عَلَمَ",
+    "Root Pattern": "تَفَعَّلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "V",
+    "English": "He learned",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَتَعَلَّمُ",
+    "Root with Vowels": "عَلَمَ",
+    "Root Pattern": "تَفَعَّلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "V",
+    "English": "He learns",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "اسْتَكْبَرَ",
+    "Root with Vowels": "كَبَرَ",
+    "Root Pattern": "X",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "X",
+    "English": "He was arrogant",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَسْتَكْبِرُ",
+    "Root with Vowels": "كَبَرَ",
+    "Root Pattern": "X",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "X",
+    "English": "He is arrogant",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "اسْتِكْبَارٌ",
+    "Root with Vowels": "كَبَرَ",
+    "Root Pattern": "X",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Arrogance",
+    "Broken Plural": "pride",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "كَبُرَ",
+    "Root with Vowels": "كَبَرَ",
+    "Root Pattern": "فَعُلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He was great",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "كَبِيرٌ",
+    "Root with Vowels": "كَبَرَ",
+    "Root Pattern": "فَعِيل",
+    "Grammatical Form": "Adjective",
+    "Verb Form": "—",
+    "English": "Great",
+    "Broken Plural": "big",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "أَكْبَرُ",
+    "Root with Vowels": "كَبَرَ",
+    "Root Pattern": "أَفْعَل",
+    "Grammatical Form": "Adjective (comparative)",
+    "Verb Form": "—",
+    "English": "Greater",
+    "Broken Plural": "bigger",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "قَدَرَ",
+    "Root with Vowels": "قَدَرَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "I",
+    "English": "He was able",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يَقْدِرُ",
+    "Root with Vowels": "قَدَرَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "I",
+    "English": "He is able",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "قَدَّرَ",
+    "Root with Vowels": "قَدَرَ",
+    "Root Pattern": "فَعَّلَ",
+    "Grammatical Form": "Verb (past)",
+    "Verb Form": "II",
+    "English": "He determined",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "يُقَدِّرُ",
+    "Root with Vowels": "قَدَرَ",
+    "Root Pattern": "فَعَّلَ",
+    "Grammatical Form": "Verb (present)",
+    "Verb Form": "II",
+    "English": "He determines",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  },
+  {
+    "Arabic": "قَدَرٌ",
+    "Root with Vowels": "قَدَرَ",
+    "Root Pattern": "فَعَلَ",
+    "Grammatical Form": "Noun (verbal noun)",
+    "Verb Form": "—",
+    "English": "Destiny",
+    "Broken Plural": "power",
+    "Broken plural yes": "—"
+  },
+  {
+    "Arabic": "الْقَدِيرُ",
+    "Root with Vowels": "قَدَرَ",
+    "Root Pattern": "فَعِيل",
+    "Grammatical Form": "Divine name",
+    "Verb Form": "—",
+    "English": "The All-Powerful",
+    "Broken Plural": "—",
+    "Broken plural yes": ""
+  }
+  ];
+
+  let mastered = JSON.parse(localStorage.getItem('masteredWords') || '[]');
+  let wrongCount = parseInt(localStorage.getItem('wrongCount') || '0');
+  let currentIdx = null, currentQ = null, answered = false, wrongThisQuestion = false;
+
+  function getProgress() {
+    return mastered.length / wordList.length;
+  }
+
+  function updateStats() {
+    document.getElementById('stats').textContent =
+      `Mastered: ${mastered.length} / ${wordList.length} | Wrong answers: ${wrongCount}`;
+    document.getElementById('progress').style.width = (getProgress()*100) + '%';
+  }
+
+  function shuffle(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function pickQuestion() {
+    const pool = wordList.filter((_, i) => !mastered.includes(i));
+    if (pool.length === 0) return null;
+    const idx = wordList.indexOf(pool[Math.floor(Math.random() * pool.length)]);
+    const word = wordList[idx];
+    const qType = Math.ceil(Math.random()*5);
+    let question = {}, choices = [], answer = "";
+
+    if (qType === 1) {
+      question.text = `What is the meaning of <b style="font-size:1.3em;color:#16a085">${word.Arabic}</b>?`;
+      answer = word.English;
+      choices = shuffle(wordList.map(w => w.English).filter(e => e !== answer)).slice(0,3);
+      choices.push(answer);
+      choices = shuffle(choices);
+    } else if (qType === 2) {
+      question.text = `Which Arabic word means <b style="color:#34495e">${word.English}</b>?`;
+      answer = word.Arabic;
+      choices = shuffle(wordList.map(w => w.Arabic).filter(a => a !== answer)).slice(0,3);
+      choices.push(answer);
+      choices = shuffle(choices);
+    } else if (qType === 3) {
+      question.text = `Select the correct English for <b style="font-size:1.3em;color:#16a085">${word.Arabic}</b>:`;
+      answer = word.English;
+      choices = shuffle(wordList.map(w => w.English).filter(e => e !== answer)).slice(0,3);
+      choices.push(answer);
+      choices = shuffle(choices);
+    } else if (qType === 4) {
+      question.text = `What is the root of <b style="font-size:1.3em;color:#16a085">${word.Arabic}</b>?`;
+      answer = word.Root;
+      choices = shuffle(wordList.map(w => w.Root).filter(r => r !== answer && r !== "—")).slice(0,3);
+      choices.push(answer);
+      choices = shuffle(choices);
+    } else {
+      question.text = `What is the grammatical form of <b style="font-size:1.3em;color:#16a085">${word.Arabic}</b>?`;
+      answer = word.Grammar;
+      choices = shuffle(wordList.map(w => w.Grammar).filter(g => g !== answer && g !== "—")).slice(0,3);
+      choices.push(answer);
+      choices = shuffle(choices);
+    }
+    question.choices = choices;
+    question.answer = answer;
+    question.idx = idx;
+    question.qType = qType;
+    return question;
+  }
+
+  function showQuestion() {
+    updateStats();
+    currentQ = pickQuestion();
+    wrongThisQuestion = false;
+    if (!currentQ) {
+      document.getElementById('question').innerHTML = "<b>Congratulations! You've mastered all words.</b>";
+      document.getElementById('choices').innerHTML = "";
+      document.getElementById('next-btn').disabled = true;
+      return;
+    }
+    currentIdx = currentQ.idx;
+    document.getElementById('question').innerHTML = currentQ.text;
+    const choicesDiv = document.getElementById('choices');
+    choicesDiv.innerHTML = "";
+    currentQ.choices.forEach(choice => {
+      const btn = document.createElement('button');
+      btn.className = "choice-btn";
+      btn.innerHTML = choice;
+      btn.onclick = () => selectAnswer(btn, choice);
+      choicesDiv.appendChild(btn);
+    });
+    document.getElementById('next-btn').disabled = true;
+    answered = false;
+  }
+
+  function selectAnswer(btn, choice) {
+    if (answered) return;
+    answered = true;
+    const correct = choice === currentQ.answer;
+    btn.classList.add(correct ? "correct" : "incorrect");
+    Array.from(document.getElementsByClassName('choice-btn')).forEach(b => {
+      if (b.innerHTML === currentQ.answer) b.classList.add("correct");
+      b.disabled = true;
+    });
+    if (correct && !mastered.includes(currentIdx)) {
+      mastered.push(currentIdx);
+      localStorage.setItem('masteredWords', JSON.stringify(mastered));
+    }
+    if (!correct && !wrongThisQuestion) {
+      wrongCount += 1;
+      wrongThisQuestion = true;
+      localStorage.setItem('wrongCount', wrongCount);
+    }
+    document.getElementById('next-btn').disabled = false;
+    updateStats();
+  }
+
+  function nextQuestion() {
+    showQuestion();
+  }
+
+  function resetProgress() {
+    if (confirm("Reset all progress?")) {
+      mastered = [];
+      wrongCount = 0;
+      localStorage.removeItem('masteredWords');
+      localStorage.removeItem('wrongCount');
+      showQuestion();
+    }
+  }
+
+  showQuestion();
+</script>
+
+</body>
+</html>

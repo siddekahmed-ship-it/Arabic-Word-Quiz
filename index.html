@@ -32,151 +32,143 @@
     <button id="next-btn" onclick="nextQuestion()" disabled>Next</button>
     <button id="reset-btn" onclick="resetProgress()">Reset Progress</button>
   </div>
- <script>
-  const wordList = [
-    {Arabic:"أَهْلٌ", Root:"أَهْلَ", Pattern:"فَعَلَ", Grammar:"Noun (singular)", VerbForm:"—", English:"Family"},
-    {Arabic:"أُو۟لَٰئِكَ", Root:"—", Pattern:"—", Grammar:"Demonstrative pronoun (plural)", VerbForm:"—", English:"Those"},
-    {Arabic:"ءَايَةٌ", Root:"ءَيَيَ", Pattern:"فَعْلَة", Grammar:"Noun (fem. singular)", VerbForm:"—", English:"Verse"},
-    {Arabic:"ءَايَاتٌ", Root:"ءَيَيَ", Pattern:"فَعْلَة", Grammar:"Noun (fem. plural)", VerbForm:"—", English:"Verses"},
-    {Arabic:"أَبٌ", Root:"أَبَ", Pattern:"فَعَلَ", Grammar:"Noun (singular)", VerbForm:"—", English:"Father"},
-    {Arabic:"آبَاءُ", Root:"أَبَ", Pattern:"فَعَلَ", Grammar:"Noun (plural)", VerbForm:"—", English:"Fathers"},
-    {Arabic:"أَتَى", Root:"أَتَى", Pattern:"فَعَلَ", Grammar:"Verb (past)", VerbForm:"I", English:"He came"},
-    {Arabic:"يَأْتِي", Root:"أَتَى", Pattern:"فَعَلَ", Grammar:"Verb (present)", VerbForm:"I", English:"He comes"},
-    {Arabic:"أَجْرٌ", Root:"أَجَرَ", Pattern:"فَعْل", Grammar:"Noun (singular)", VerbForm:"—", English:"Reward"},
-    {Arabic:"أُجُورٌ", Root:"أَجَرَ", Pattern:"فُعُول", Grammar:"Noun (plural)", VerbForm:"—", English:"Rewards"}
-  ];
+  <script>
+    // Sample data from your list
+    const wordList = [
+      {Arabic:"أَهْلٌ", Root:"أَهْلَ", Pattern:"فَعَلَ", Grammar:"Noun (singular)", VerbForm:"—", English:"Family"},
+      {Arabic:"أُو۟لَٰئِكَ", Root:"—", Pattern:"—", Grammar:"Demonstrative pronoun (plural)", VerbForm:"—", English:"Those"},
+      {Arabic:"ءَايَةٌ", Root:"ءَيَيَ", Pattern:"فَعْلَة", Grammar:"Noun (fem. singular)", VerbForm:"—", English:"Verse"},
+      {Arabic:"ءَايَاتٌ", Root:"ءَيَيَ", Pattern:"فَعْلَة", Grammar:"Noun (fem. plural)", VerbForm:"—", English:"Verses"},
+      {Arabic:"أَبٌ", Root:"أَبَ", Pattern:"فَعَلَ", Grammar:"Noun (singular)", VerbForm:"—", English:"Father"},
+      {Arabic:"آبَاءُ", Root:"أَبَ", Pattern:"فَعَلَ", Grammar:"Noun (plural)", VerbForm:"—", English:"Fathers"},
+      {Arabic:"أَتَى", Root:"أَتَى", Pattern:"فَعَلَ", Grammar:"Verb (past)", VerbForm:"I", English:"He came"},
+      {Arabic:"يَأْتِي", Root:"أَتَى", Pattern:"فَعَلَ", Grammar:"Verb (present)", VerbForm:"I", English:"He comes"},
+      {Arabic:"أَجْرٌ", Root:"أَجَرَ", Pattern:"فَعْل", Grammar:"Noun (singular)", VerbForm:"—", English:"Reward"},
+      {Arabic:"أُجُورٌ", Root:"أَجَرَ", Pattern:"فُعُول", Grammar:"Noun (plural)", VerbForm:"—", English:"Rewards"}
+    ];
 
-  let mastered = JSON.parse(localStorage.getItem('masteredWords') || '[]');
-  let wrongCount = parseInt(localStorage.getItem('wrongCount') || '0');
-  let currentIdx = null, currentQ = null, answered = false;
+    // Progress tracking
+    let mastered = JSON.parse(localStorage.getItem('masteredWords') || '[]');
+    let currentIdx = null, currentQ = null, answered = false;
 
-  function getProgress() {
-    return mastered.length / wordList.length;
-  }
-
-  function updateStats() {
-    document.getElementById('stats').textContent =
-      `Mastered: ${mastered.length} / ${wordList.length} | Wrong answers: ${wrongCount}`;
-    document.getElementById('progress').style.width = (getProgress()*100) + '%';
-  }
-
-  function shuffle(arr) {
-    for (let i = arr.length - 1; i > 0; i--) {
-      const j = Math.floor(Math.random() * (i + 1));
-      [arr[i], arr[j]] = [arr[j], arr[i]];
+    function getProgress() {
+      return mastered.length / wordList.length;
     }
-    return arr;
-  }
 
-  function pickQuestion() {
-    const pool = wordList.filter((_, i) => !mastered.includes(i));
-    if (pool.length === 0) return null;
-    const idx = wordList.indexOf(pool[Math.floor(Math.random() * pool.length)]);
-    const word = wordList[idx];
-    const qType = Math.ceil(Math.random()*5);
-    let question = {}, choices = [], answer = "";
-
-    if (qType === 1) {
-      question.text = `What is the meaning of <b style="font-size:1.3em;color:#16a085">${word.Arabic}</b>?`;
-      answer = word.English;
-      choices = shuffle(wordList.map(w => w.English).filter(e => e !== answer)).slice(0,3);
-      choices.push(answer);
-      choices = shuffle(choices);
-    } else if (qType === 2) {
-      question.text = `Which Arabic word means <b style="color:#34495e">${word.English}</b>?`;
-      answer = word.Arabic;
-      choices = shuffle(wordList.map(w => w.Arabic).filter(a => a !== answer)).slice(0,3);
-      choices.push(answer);
-      choices = shuffle(choices);
-    } else if (qType === 3) {
-      question.text = `Select the correct English for <b style="font-size:1.3em;color:#16a085">${word.Arabic}</b>:`;
-      answer = word.English;
-      choices = shuffle(wordList.map(w => w.English).filter(e => e !== answer)).slice(0,3);
-      choices.push(answer);
-      choices = shuffle(choices);
-    } else if (qType === 4) {
-      question.text = `What is the root of <b style="font-size:1.3em;color:#16a085">${word.Arabic}</b>?`;
-      answer = word.Root;
-      choices = shuffle(wordList.map(w => w.Root).filter(r => r !== answer && r !== "—")).slice(0,3);
-      choices.push(answer);
-      choices = shuffle(choices);
-    } else {
-      question.text = `What is the grammatical form of <b style="font-size:1.3em;color:#16a085">${word.Arabic}</b>?`;
-      answer = word.Grammar;
-      choices = shuffle(wordList.map(w => w.Grammar).filter(g => g !== answer && g !== "—")).slice(0,3);
-      choices.push(answer);
-      choices = shuffle(choices);
+    function updateStats() {
+      document.getElementById('stats').textContent =
+        `Mastered: ${mastered.length} / ${wordList.length}`;
+      document.getElementById('progress').style.width = (getProgress()*100) + '%';
     }
-    question.choices = choices;
-    question.answer = answer;
-    question.idx = idx;
-    question.qType = qType;
-    return question;
-  }
 
-  function showQuestion() {
-    updateStats();
-    currentQ = pickQuestion();
-    if (!currentQ) {
-      document.getElementById('question').innerHTML = "<b>Congratulations! You've mastered all words.</b>";
-      document.getElementById('choices').innerHTML = "";
+    function shuffle(arr) {
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+
+    function pickQuestion() {
+      const pool = wordList.filter((_, i) => !mastered.includes(i));
+      if (pool.length === 0) return null;
+      const idx = wordList.indexOf(pool[Math.floor(Math.random() * pool.length)]);
+      const word = wordList[idx];
+      const qType = Math.ceil(Math.random()*5);
+      let question = {}, choices = [], answer = "";
+
+      if (qType === 1) {
+        question.text = `What is the meaning of <b style="font-size:1.3em;color:#16a085">${word.Arabic}</b>?`;
+        answer = word.English;
+        choices = shuffle(wordList.map(w => w.English).filter(e => e !== answer)).slice(0,3);
+        choices.push(answer);
+        choices = shuffle(choices);
+      } else if (qType === 2) {
+        question.text = `Which Arabic word means <b style="color:#34495e">${word.English}</b>?`;
+        answer = word.Arabic;
+        choices = shuffle(wordList.map(w => w.Arabic).filter(a => a !== answer)).slice(0,3);
+        choices.push(answer);
+        choices = shuffle(choices);
+      } else if (qType === 3) {
+        question.text = `Select the correct English for <b style="font-size:1.3em;color:#16a085">${word.Arabic}</b>:`;
+        answer = word.English;
+        choices = shuffle(wordList.map(w => w.English).filter(e => e !== answer)).slice(0,3);
+        choices.push(answer);
+        choices = shuffle(choices);
+      } else if (qType === 4) {
+        question.text = `What is the root of <b style="font-size:1.3em;color:#16a085">${word.Arabic}</b>?`;
+        answer = word.Root;
+        choices = shuffle(wordList.map(w => w.Root).filter(r => r !== answer && r !== "—")).slice(0,3);
+        choices.push(answer);
+        choices = shuffle(choices);
+      } else {
+        question.text = `What is the grammatical form of <b style="font-size:1.3em;color:#16a085">${word.Arabic}</b>?`;
+        answer = word.Grammar;
+        choices = shuffle(wordList.map(w => w.Grammar).filter(g => g !== answer && g !== "—")).slice(0,3);
+        choices.push(answer);
+        choices = shuffle(choices);
+      }
+      question.choices = choices;
+      question.answer = answer;
+      question.idx = idx;
+      question.qType = qType;
+      return question;
+    }
+
+    function showQuestion() {
+      updateStats();
+      currentQ = pickQuestion();
+      if (!currentQ) {
+        document.getElementById('question').innerHTML = "<b>Congratulations! You've mastered all words.</b>";
+        document.getElementById('choices').innerHTML = "";
+        document.getElementById('next-btn').disabled = true;
+        return;
+      }
+      currentIdx = currentQ.idx;
+      document.getElementById('question').innerHTML = currentQ.text;
+      const choicesDiv = document.getElementById('choices');
+      choicesDiv.innerHTML = "";
+      currentQ.choices.forEach(choice => {
+        const btn = document.createElement('button');
+        btn.className = "choice-btn";
+        btn.innerHTML = choice;
+        btn.onclick = () => selectAnswer(btn, choice);
+        choicesDiv.appendChild(btn);
+      });
       document.getElementById('next-btn').disabled = true;
-      return;
+      answered = false;
     }
-    currentIdx = currentQ.idx;
-    document.getElementById('question').innerHTML = currentQ.text;
-    const choicesDiv = document.getElementById('choices');
-    choicesDiv.innerHTML = "";
-    currentQ.choices.forEach(choice => {
-      const btn = document.createElement('button');
-      btn.className = "choice-btn";
-      btn.innerHTML = choice;
-      btn.onclick = () => selectAnswer(btn, choice);
-      choicesDiv.appendChild(btn);
-    });
-    document.getElementById('next-btn').disabled = true;
-    answered = false;
-  }
 
-  function selectAnswer(btn, choice) {
-    if (answered) return;
-    answered = true;
-    const correct = choice === currentQ.answer;
-    btn.classList.add(correct ? "correct" : "incorrect");
-    Array.from(document.getElementsByClassName('choice-btn')).forEach(b => {
-      if (b.innerHTML === currentQ.answer) b.classList.add("correct");
-      b.disabled = true;
-    });
-    if (correct && !mastered.includes(currentIdx)) {
-      mastered.push(currentIdx);
-      localStorage.setItem('masteredWords', JSON.stringify(mastered));
+    function selectAnswer(btn, choice) {
+      if (answered) return;
+      answered = true;
+      const correct = choice === currentQ.answer;
+      btn.classList.add(correct ? "correct" : "incorrect");
+      Array.from(document.getElementsByClassName('choice-btn')).forEach(b => {
+        if (b.innerHTML === currentQ.answer) b.classList.add("correct");
+        b.disabled = true;
+      });
+      if (correct && !mastered.includes(currentIdx)) {
+        mastered.push(currentIdx);
+        localStorage.setItem('masteredWords', JSON.stringify(mastered));
+      }
+      document.getElementById('next-btn').disabled = false;
+      updateStats();
     }
-    if (!correct) {
-      wrongCount += 1;
-      localStorage.setItem('wrongCount', wrongCount);
-    }
-    document.getElementById('next-btn').disabled = false;
-    updateStats();
-  }
 
-  function nextQuestion() {
-    showQuestion();
-  }
-
-  function resetProgress() {
-    if (confirm("Reset all progress?")) {
-      mastered = [];
-      wrongCount = 0;
-      localStorage.removeItem('masteredWords');
-      localStorage.removeItem('wrongCount');
+    function nextQuestion() {
       showQuestion();
     }
-  }
 
-  showQuestion();
-</script>
+    function resetProgress() {
+      if (confirm("Reset all progress?")) {
+        mastered = [];
+        localStorage.removeItem('masteredWords');
+        showQuestion();
+      }
+    }
 
-  /body>
+    showQuestion();
+  </script>
+</body>
 </html>
-
-

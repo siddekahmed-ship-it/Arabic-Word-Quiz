@@ -182,48 +182,40 @@ h1 { margin-top: 30px; color: #2c3e50; }
   }
 
   function pickQuestion() {
-    if (currentIdx >= totalQuestions) return null;
-    const word = quizWords[currentIdx];
-    const qType = Math.ceil(Math.random()*5);
-    let question = {}, choices = [], answer = "";
+  if (currentIdx >= totalQuestions) return null;
+  const word = quizWords[currentIdx];
+  const qType = Math.ceil(Math.random() * 3); // Limit to 3 valid question types
+  let question = {}, choices = [], answer = "";
 
-    if (qType === 1) {
-      question.text = `What is the meaning of <b style="font-size:2em;color:#16a085">${word.Arabic}</b>?`;
-      answer = word.English;
-      choices = shuffle(wordList.map(w => w.English).filter(e => e !== answer)).slice(0,3);
-      choices.push(answer);
-      choices = shuffle(choices);
-    } else if (qType === 2) {
-      question.text = `Which Arabic word means <b style="color:#34495e">${word.English}</b>?`;
-      answer = word.Arabic;
-      choices = shuffle(wordList.map(w => w.Arabic).filter(a => a !== answer)).slice(0,3);
-      choices.push(answer);
-      choices = shuffle(choices);
-    } else if (qType === 3) {
-      question.text = `Select the correct English for <b style="font-size:2em;color:#16a085">${word.Arabic}</b>:`;
-      answer = word.English;
-      choices = shuffle(wordList.map(w => w.English).filter(e => e !== answer)).slice(0,3);
-      choices.push(answer);
-      choices = shuffle(choices);
-    } else if (qType === 4) {
-      question.text = `What is the root of <b style="font-size:2em;color:#16a085">${word.Arabic}</b>?`;
-      answer = word["Root with Vowels"];
-      choices = shuffle(wordList.map(w => w["Root with Vowels"]).filter(r => r !== answer && r !== "—")).slice(0,3);
-      choices.push(answer);
-      choices = shuffle(choices);
-    } else {
-      question.text = `What is the grammatical form of <b style="font-size:2em;color:#16a085">${word.Arabic}</b>?`;
-      answer = word["Grammatical Form"];
-      choices = shuffle(wordList.map(w => w["Grammatical Form"]).filter(g => g !== answer && g !== "—")).slice(0,3);
-      choices.push(answer);
-      choices = shuffle(choices);
-    }
-    question.choices = choices;
-    question.answer = answer;
-    question.word = word;
-    question.qType = qType;
-    return question;
+  if (qType === 1) {
+    // Arabic → English
+    question.text = `What is the English meaning of <b style="font-size:2em;color:#16a085">${word["Arabic Pronoun"]}</b>?`;
+    answer = word["English Pronoun"];
+    choices = shuffle(wordList.map(w => w["English Pronoun"]).filter(e => e !== answer)).slice(0, 3);
+    choices.push(answer);
+    choices = shuffle(choices);
+  } else if (qType === 2) {
+    // English → Arabic
+    question.text = `Which Arabic pronoun means <b style="color:#34495e">${word["English Pronoun"]}</b>?`;
+    answer = word["Arabic Pronoun"];
+    choices = shuffle(wordList.map(w => w["Arabic Pronoun"]).filter(a => a !== answer && a !== "")).slice(0, 3);
+    choices.push(answer);
+    choices = shuffle(choices);
+  } else {
+    // Arabic → Grammatical Info
+    question.text = `What is the grammatical description of <b style="font-size:2em;color:#16a085">${word["Arabic Pronoun"]}</b>?`;
+    answer = `${word.Number}, ${word.Person}`;
+    choices = shuffle(wordList.map(w => `${w.Number}, ${w.Person}`).filter(g => g !== answer)).slice(0, 3);
+    choices.push(answer);
+    choices = shuffle(choices);
   }
+
+  question.choices = choices;
+  question.answer = answer;
+  question.word = word;
+  question.qType = qType;
+  return question;
+}
 
   function showQuestion() {
     updateStats();
